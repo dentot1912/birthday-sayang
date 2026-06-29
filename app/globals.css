@@ -180,6 +180,41 @@ body {
   }
 }
 
+@keyframes pulseSparkle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes floatHeart {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translateY(-8px) rotate(8deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-14px) rotate(-3deg);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-6px) rotate(5deg);
+    opacity: 0.9;
+  }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* =====================================================================
    UTILITY CLASSES
    ===================================================================== */
@@ -208,32 +243,115 @@ body {
     display: block !important;
     min-height: auto !important;
     height: auto !important;
-    padding: 80px 5vw 120px 5vw !important;
+    padding: 60px 5vw 100px 5vw !important;
     overflow: visible !important;
   }
 
   .hero-grid {
     display: flex !important;
     flex-direction: column !important;
+    text-align: center;
   }
 
+  .hero-grid > div:first-child p {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-grid > div:first-child [data-h="btns"] {
+    justify-content: center !important;
+  }
+
+  /* ── Hero Photos Container ── */
   .hero-photos {
     display: flex !important;
-    height: 380px !important;
+    height: clamp(320px, 80vw, 440px) !important;
     margin-top: 0 !important;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     order: -1 !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
 
+  /* Main image — fill the area */
+  .hero-photos [data-h="img1"] {
+    width: 80% !important;
+    height: 80% !important;
+    box-shadow:
+      0 20px 50px rgba(0,0,0,.14),
+      0 0 0 3px rgba(255,255,255,.7),
+      0 0 0 7px rgba(212,137,154,.18) !important;
+  }
+
+  /* Gradient ring behind image */
+  .hero-photos .hero-ring {
+    width: 88% !important;
+    height: 88% !important;
+    opacity: 0.35 !important;
+    filter: blur(3px) !important;
+  }
+
+  /* Primary glow — scale down for mobile */
+  .hero-photos .hero-glow-primary {
+    width: 260px !important;
+    height: 260px !important;
+    filter: blur(60px) !important;
+  }
+
+  /* Secondary glow — scale down */
+  .hero-photos .hero-glow-secondary {
+    width: 160px !important;
+    height: 160px !important;
+    filter: blur(40px) !important;
+    top: 10% !important;
+    left: 5% !important;
+  }
+
+  /* Heart badge — smaller and tighter */
   .hero-photos [data-h="img3"] {
-    width: 70px !important;
-    height: 70px !important;
-    right: 8% !important;
+    width: 58px !important;
+    height: 58px !important;
+    right: 6% !important;
+    top: 4% !important;
+    box-shadow:
+      0 8px 24px rgba(255,77,109,.3),
+      0 0 0 3px rgba(255,255,255,.6) !important;
   }
 
   .hero-photos [data-h="img3"] svg {
-    width: 24px !important;
-    height: 24px !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* Sparkle dots — resize for mobile */
+  .hero-sparkle-1 {
+    width: 6px !important;
+    height: 6px !important;
+    top: 10% !important;
+    left: 14% !important;
+  }
+  .hero-sparkle-2 {
+    width: 5px !important;
+    height: 5px !important;
+    bottom: 15% !important;
+    left: 8% !important;
+  }
+  .hero-sparkle-3 {
+    width: 7px !important;
+    height: 7px !important;
+    bottom: 22% !important;
+    right: 5% !important;
+  }
+  .hero-sparkle-4 {
+    width: 4px !important;
+    height: 4px !important;
+    top: 28% !important;
+    right: 3% !important;
+  }
+
+  /* Mini hearts — reposition for mobile */
+  .hero-mini-heart {
+    display: block;
   }
 
   .split-section {
@@ -242,6 +360,35 @@ body {
 
   .memories-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .hero-photos {
+    height: clamp(280px, 75vw, 360px) !important;
+    margin-bottom: 24px;
+  }
+
+  .hero-photos [data-h="img1"] {
+    width: 85% !important;
+    height: 82% !important;
+  }
+
+  .hero-photos [data-h="img3"] {
+    width: 48px !important;
+    height: 48px !important;
+    right: 4% !important;
+    top: 6% !important;
+  }
+
+  .hero-photos [data-h="img3"] svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .hero-sparkle {
+    display: none !important;
   }
 }
 
@@ -826,45 +973,172 @@ body {
 }
 
 @media (max-width: 768px) {
+
+  /* ── Full-screen immersive panel ── */
+  .cute-lightbox-overlay {
+    padding: 0;
+    background: rgba(26, 16, 12, 0.95);
+  }
+
   .cute-lightbox-panel {
+    display: flex;
+    flex-direction: column;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    max-height: 94vh;
-    max-width: 440px;
-    border-radius: 28px;
-    border-width: 4px;
+    max-height: 100vh;
+    max-height: 100dvh;
+    max-width: 100vw;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    overflow: hidden;
   }
 
+  /* ── Photo section: edge-to-edge, dominant ── */
   .cute-lightbox-photo-sec {
-    height: 320px;
-    min-height: auto;
-    padding: 24px 16px;
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
-  .cute-polaroid-frame {
-    padding: 10px 10px 24px 10px;
-    max-width: 95%;
+  /* Remove polaroid frame on mobile — show clean photo */
+  .cute-lightbox-photo-sec .cute-polaroid-frame {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
   }
 
+  /* Hide washi tape decoration on mobile */
+  .cute-lightbox-photo-sec .cute-polaroid-frame > div:first-child {
+    display: none !important;
+  }
+
+  /* Photo fills the space */
   .cute-polaroid-photo {
-    max-height: 240px;
+    max-height: 65vh;
+    max-height: 65dvh;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    border-radius: 16px;
+    border: none;
+    object-fit: contain;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
   }
 
+  /* Hide desktop polaroid caption — we show it in the overlay */
   .cute-polaroid-caption {
-    font-size: 12px;
-    margin-top: 8px;
+    display: none;
   }
 
-  .cute-lightbox-info-sec {
-    border-left: none;
-    border-top: 2px dashed #f5d5d5;
-    padding: 28px 20px 20px;
-    overflow-y: visible;
+  /* Hide decorative hearts/sparkles on mobile */
+  .cute-lightbox-photo-sec > svg {
+    display: none !important;
   }
 
-  .cute-lightbox-close-btn {
-    top: 12px;
+  /* Hide desktop progress bar on mobile */
+  .cute-lightbox-photo-sec > div:last-child {
+    display: none;
+  }
+
+  /* ── Nav buttons: repositioned for thumb zone ── */
+  .cute-lightbox-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .cute-lightbox-btn:hover {
+    background: rgba(212, 137, 154, 0.5);
+    border-color: rgba(212, 137, 154, 0.6);
+    color: #fff;
+  }
+
+  .cute-lightbox-btn.prev {
+    left: 12px;
+  }
+
+  .cute-lightbox-btn.next {
     right: 12px;
-    background: rgba(255, 255, 255, 0.85);
+  }
+
+  /* ── Close button: top-right glass pill ── */
+  .cute-lightbox-close-btn {
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
+
+  .cute-lightbox-close-btn:hover {
+    background: rgba(168, 79, 101, 0.6);
+    border-color: rgba(168, 79, 101, 0.7);
+    color: #fff;
+  }
+
+  /* ── Info panel: glassmorphism bottom card ── */
+  .cute-lightbox-info-sec {
+    flex: none;
+    border-left: none;
+    border-top: none;
+    background: linear-gradient(
+      to top,
+      rgba(255, 253, 250, 0.97) 0%,
+      rgba(255, 248, 245, 0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    padding: 20px 20px 24px;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
+    max-height: 38vh;
+    max-height: 38dvh;
+  }
+
+  /* ── Compact typography in info panel ── */
+  .cute-lightbox-info-sec h2 {
+    font-size: 1.15rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .cute-lightbox-info-sec p {
+    font-size: 12px !important;
+    line-height: 1.65 !important;
+  }
+
+  /* Shrink the sticker badge */
+  .cute-lightbox-info-sec > div:first-child > div:first-child > div:first-child {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Dots and thumbs: hide thumbs on mobile, keep dots */
+  .lb-thumb {
+    display: none;
   }
 }

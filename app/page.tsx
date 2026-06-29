@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
@@ -300,10 +300,6 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
             dan berharganya kamu dalam hidupku. Kamu adalah hadiah terindahku.
           </p>
 
-          <audio autoPlay loop>
-            <source src="/images/music.mp3" type="audio/mpeg" />
-          </audio>
-
           <div data-h="btns" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Btn id="celebrate-btn" onClick={onCelebrate} primary>
               <PartyPopper size={16} /> Rayakan!
@@ -324,8 +320,9 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
             alignItems: "center",
           }}
         >
-          {/* Glow Background */}
+          {/* Glow Background — Primary */}
           <div
+            className="hero-glow-primary"
             style={{
               position: "absolute",
               width: 380,
@@ -337,6 +334,81 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
             }}
           />
 
+          {/* Glow Background — Secondary (gold accent) */}
+          <div
+            className="hero-glow-secondary"
+            style={{
+              position: "absolute",
+              width: 250,
+              height: 250,
+              borderRadius: "50%",
+              background: "rgba(201,169,110,.18)",
+              filter: "blur(60px)",
+              zIndex: 0,
+              top: "15%",
+              left: "10%",
+            }}
+          />
+
+          {/* Decorative gradient ring behind image */}
+          <div
+            className="hero-ring"
+            style={{
+              position: "absolute",
+              width: "78%",
+              height: "83%",
+              borderRadius: "58% 42% 63% 37% / 38% 62% 38% 62%",
+              background: `linear-gradient(135deg, ${C.blushL}, ${C.goldL}, ${C.blush})`,
+              zIndex: 1,
+              opacity: 0.5,
+              filter: "blur(2px)",
+            }}
+          />
+
+          {/* Decorative sparkle dots */}
+          <div className="hero-sparkle hero-sparkle-1" style={{
+            position: "absolute", width: 8, height: 8, borderRadius: "50%",
+            background: C.goldL, zIndex: 6, top: "12%", left: "18%",
+            animation: "pulseSparkle 3s ease-in-out infinite",
+            boxShadow: `0 0 12px ${C.goldL}`,
+          }} />
+          <div className="hero-sparkle hero-sparkle-2" style={{
+            position: "absolute", width: 6, height: 6, borderRadius: "50%",
+            background: C.blushL, zIndex: 6, bottom: "18%", left: "12%",
+            animation: "pulseSparkle 3s ease-in-out 1s infinite",
+            boxShadow: `0 0 10px ${C.blushL}`,
+          }} />
+          <div className="hero-sparkle hero-sparkle-3" style={{
+            position: "absolute", width: 10, height: 10, borderRadius: "50%",
+            background: C.goldL, zIndex: 6, bottom: "25%", right: "8%",
+            animation: "pulseSparkle 3s ease-in-out 0.5s infinite",
+            boxShadow: `0 0 14px ${C.goldL}`,
+          }} />
+          <div className="hero-sparkle hero-sparkle-4" style={{
+            position: "absolute", width: 5, height: 5, borderRadius: "50%",
+            background: C.blush, zIndex: 6, top: "30%", right: "5%",
+            animation: "pulseSparkle 2.5s ease-in-out 1.5s infinite",
+            boxShadow: `0 0 8px ${C.blush}`,
+          }} />
+
+          {/* Small floating heart accents */}
+          <div className="hero-mini-heart" style={{
+            position: "absolute", zIndex: 6,
+            bottom: "12%", left: "20%",
+            animation: "floatHeart 5s ease-in-out infinite",
+            opacity: 0.6,
+          }}>
+            <Heart size={14} fill={C.blushL} color={C.blushL} />
+          </div>
+          <div className="hero-mini-heart" style={{
+            position: "absolute", zIndex: 6,
+            top: "20%", right: "20%",
+            animation: "floatHeart 4s ease-in-out 1.5s infinite",
+            opacity: 0.45,
+          }}>
+            <Heart size={10} fill={C.goldL} color={C.goldL} />
+          </div>
+
           {/* Main Image */}
           <div
             data-h="img1"
@@ -345,7 +417,7 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
               height: "75%",
               overflow: "hidden",
               borderRadius: "58% 42% 63% 37% / 38% 62% 38% 62%",
-              boxShadow: "0 25px 60px rgba(0,0,0,.18)",
+              boxShadow: `0 25px 60px rgba(0,0,0,.18), 0 0 0 3px rgba(255,255,255,.6), 0 0 0 6px ${C.blushL}40`,
               position: "relative",
               zIndex: 3,
             }}
@@ -361,6 +433,15 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
                 objectPosition: "bottom"
               }}
             />
+            {/* Subtle inner vignette overlay */}
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "inherit",
+              boxShadow: "inset 0 -30px 50px rgba(0,0,0,.08)",
+              pointerEvents: "none",
+              zIndex: 4,
+            }} />
           </div>
 
           {/* Heart Badge */}
@@ -378,7 +459,7 @@ function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 12px 35px rgba(255,77,109,.35)',
+              boxShadow: '0 12px 35px rgba(255,77,109,.35), 0 0 0 4px rgba(255,255,255,.5)',
               zIndex: 5,
               animation: 'float 4s ease-in-out infinite',
             }}
@@ -1075,6 +1156,50 @@ const GALLERY_ITEMS = [
 
 const GALLERY_TAGS = ['Semua', 'Spesial', 'Cinta', 'Momen', 'Jalan-jalan'];
 
+/* ── Thumbnail (memoized) ── */
+const LightboxThumb = React.memo(function LightboxThumb({
+  src, label, isActive, onClick, isVideo,
+}: { src: string; label: string; isActive: boolean; onClick: () => void; isVideo: boolean }) {
+  return (
+    <div onClick={onClick} className="lb-thumb" style={{ cursor: 'pointer', flexShrink: 0 }}>
+      {isVideo ? (
+        <div style={{
+          width: 38, height: 28, borderRadius: 6, display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          background: '#f3ede4',
+          border: isActive ? '2px solid #d4899a' : '2px solid transparent',
+          opacity: isActive ? 1 : 0.4,
+          transition: 'all 0.25s ease',
+          boxShadow: isActive ? '0 2px 8px rgba(212,137,154,0.3)' : 'none',
+        }}>
+          <Play size={10} style={{ color: '#d4899a' }} />
+        </div>
+      ) : (
+        <img src={src} alt={label} loading="lazy" decoding="async" style={{
+          width: 38, height: 28, objectFit: 'cover', borderRadius: 6, display: 'block',
+          border: isActive ? '2px solid #d4899a' : '2px solid transparent',
+          opacity: isActive ? 1 : 0.4,
+          transition: 'all 0.25s ease',
+          boxShadow: isActive ? '0 2px 8px rgba(212,137,154,0.3)' : 'none',
+        }} />
+      )}
+    </div>
+  );
+});
+
+/* ── Pill Dot (memoized) ── */
+const PillDot = React.memo(function PillDot({ isActive, onClick }: { isActive: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{
+      height: 6, borderRadius: 3, border: 'none', outline: 'none', padding: 0, cursor: 'pointer',
+      width: isActive ? 22 : 6,
+      background: isActive ? 'linear-gradient(90deg, #d4899a, #c9a96e)' : '#e8dfd3',
+      boxShadow: isActive ? '0 0 10px rgba(212, 137, 154, 0.4)' : 'none',
+      transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    }} />
+  );
+});
+
 /* ── Lightbox ── */
 function GalleryLightbox({ images, current, onClose, onNav }: {
   images: typeof GALLERY_ITEMS; current: number;
@@ -1085,6 +1210,12 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
   const imgRef = useRef<any>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const item = images[current];
+
+  // Stable refs for keyboard handler to avoid re-registering
+  const onCloseRef = useRef(onClose);
+  const onNavRef = useRef(onNav);
+  onCloseRef.current = onClose;
+  onNavRef.current = onNav;
 
   /* ── Cute Entrance Animation ── */
   useEffect(() => {
@@ -1107,16 +1238,45 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
     );
   }, [current]);
 
-  /* ── Keyboard ── */
+  /* ── Keyboard (stable, no re-registration) ── */
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') onNav(1);
-      if (e.key === 'ArrowLeft') onNav(-1);
+      if (e.key === 'Escape') onCloseRef.current();
+      if (e.key === 'ArrowRight') onNavRef.current(1);
+      if (e.key === 'ArrowLeft') onNavRef.current(-1);
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onClose, onNav]);
+  }, []);
+
+  /* ── Touch swipe for mobile ── */
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    let startX = 0;
+    let startY = 0;
+    const onStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) onNavRef.current(1);
+        else onNavRef.current(-1);
+      }
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, []);
+
+  /* ── Stable nav callback for children ── */
+  const goTo = useCallback((i: number) => { onNav(i - current); }, [onNav, current]);
 
   return (
     <div
@@ -1263,62 +1423,43 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
           </div>
 
           {/* Bottom Half */}
-          <div style={{ marginTop: 24 }}>
-            {/* Cute Large Counter */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
-              <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: '2.8rem', lineHeight: 1, color: '#d4899a' }}>
+          <div style={{ marginTop: 20 }}>
+            {/* Counter + Pill Dots — inline row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <span className="lb-counter" style={{
+                fontFamily: SERIF, fontWeight: 700, fontSize: '1.6rem', lineHeight: 1,
+                color: '#d4899a', flexShrink: 0,
+              }}>
                 {String(current + 1).padStart(2, '0')}
+                <span style={{ fontSize: 12, color: '#c9a96e', fontFamily: SANS, fontWeight: 400 }}> / {String(images.length).padStart(2, '0')}</span>
               </span>
-              <span style={{ fontSize: 13, color: '#c9a96e', fontFamily: SANS }}>/ {String(images.length).padStart(2, '0')}</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, flex: 1 }}>
+                {images.map((_, i) => (
+                  <PillDot key={i} isActive={i === current} onClick={() => goTo(i)} />
+                ))}
+              </div>
             </div>
 
-            {/* Pill Dots Navigator */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-              {images.map((_, i) => (
-                <button key={i} onClick={() => onNav(i - current)} style={{
-                  height: 6, borderRadius: 3, border: 'none', outline: 'none', padding: 0, cursor: 'pointer',
-                  width: i === current ? 22 : 6,
-                  background: i === current ? `linear-gradient(90deg, #d4899a, #c9a96e)` : '#e8dfd3',
-                  boxShadow: i === current ? `0 0 10px rgba(212, 137, 154, 0.4)` : 'none',
-                  transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                }} />
-              ))}
-            </div>
-
-            {/* Thumbnail Row */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            {/* Thumbnail Row (hidden on mobile via CSS) */}
+            <div className="lb-thumb-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
               {images.map((img, i) => (
-                <div key={i} onClick={() => onNav(i - current)} style={{ cursor: 'pointer', flexShrink: 0 }}>
-                  {img.src.endsWith('.mp4') ? (
-                    <video src={img.src} muted playsInline style={{
-                      width: 38, height: 28, objectFit: 'cover', borderRadius: 6, display: 'block',
-                      border: i === current ? `2px solid #d4899a` : '2px solid transparent',
-                      opacity: i === current ? 1 : 0.4,
-                      transition: 'all 0.25s ease',
-                      boxShadow: i === current ? `0 2px 8px rgba(212,137,154,0.3)` : 'none',
-                    }}
-                      onMouseEnter={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
-                      onMouseLeave={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
-                    />
-                  ) : (
-                    <img src={img.src} alt={img.label} style={{
-                      width: 38, height: 28, objectFit: 'cover', borderRadius: 6, display: 'block',
-                      border: i === current ? `2px solid #d4899a` : '2px solid transparent',
-                      opacity: i === current ? 1 : 0.4,
-                      transition: 'all 0.25s ease',
-                      boxShadow: i === current ? `0 2px 8px rgba(212,137,154,0.3)` : 'none',
-                    }}
-                      onMouseEnter={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
-                      onMouseLeave={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
-                    />
-                  )}
-                </div>
+                <LightboxThumb
+                  key={i}
+                  src={img.src}
+                  label={img.label}
+                  isActive={i === current}
+                  isVideo={img.src.endsWith('.mp4')}
+                  onClick={() => goTo(i)}
+                />
               ))}
             </div>
 
-            {/* Close hint */}
-            <p style={{ fontSize: 9, color: '#9a897c', opacity: 0.7, fontFamily: SANS, letterSpacing: '0.05em' }}>
+            {/* Swipe hint for mobile / keyboard hint for desktop */}
+            <p className="lb-hint-desktop" style={{ fontSize: 9, color: '#9a897c', opacity: 0.7, fontFamily: SANS, letterSpacing: '0.05em' }}>
               🌸 Gunakan &#8592; &#8594; atau ESC untuk menutup
+            </p>
+            <p className="lb-hint-mobile" style={{ fontSize: 10, color: '#9a897c', opacity: 0.6, fontFamily: SANS, letterSpacing: '0.03em', textAlign: 'center', display: 'none' }}>
+              ← Swipe untuk navigasi · Tap di luar untuk tutup →
             </p>
           </div>
         </div>
@@ -1328,7 +1469,6 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
 }
 
 /* ── Gallery Section ── */
-
 function GallerySection() {
   const ref = useRef<HTMLElement>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -1453,7 +1593,7 @@ function GallerySection() {
                 color: C.blush,
                 background: `linear-gradient(135deg, ${C.blush}, ${C.blushD})`,
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>Indah</span> Kita
+              }}>Indah</span> Muu
             </h2>
 
             <p style={{ fontSize: 15, color: C.textM, fontFamily: SANS, maxWidth: 460, margin: '0 auto 28px', lineHeight: 1.75 }}>
@@ -1807,9 +1947,19 @@ function FinalSection({ onCelebrate }: { onCelebrate: () => void }) {
 
 export default function BirthdayPage() {
   const [confetti, setConfetti] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const handleCelebrate = () => {
     setConfetti(true);
     setTimeout(() => setConfetti(false), 6000);
+
+    // Play music
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/images/music.mp3');
+      audioRef.current.loop = true;
+    }
+    audioRef.current.currentTime = 3;
+    audioRef.current.play().catch(() => {});
   };
 
   return (
