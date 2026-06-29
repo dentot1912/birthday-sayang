@@ -1,65 +1,1829 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useRef, useCallback } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  Cake, Heart, Star, Sparkles, Sun, Moon,
+  Camera, Music, Coffee, Flame, MapPin,
+  ArrowDown, Quote, Flower2, Gem, Crown, Compass,
+  Wind, PartyPopper, Mail, Gift, Ribbon,
+  ChevronLeft, ChevronRight, X,
+  GraduationCap, School, Smile, Bike, Smartphone, BookOpen, Zap, Play,
+} from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════════════════════════════════ */
+const BIRTHDAY_DATE = new Date('2026-06-14T00:00:00');
+const NAME = 'Sayang';
+const SENDER_NAME = 'Aku';
+
+/* ── Colors ── */
+const C = {
+  bg: '#faf6f1',
+  bg2: '#f3ede4',
+  cream: '#fdfbf8',
+  warm: '#e8dfd3',
+  blush: '#d4899a',
+  blushL: '#f5d5d5',
+  blushD: '#a84f65',
+  gold: '#c9a96e',
+  goldL: '#e6cfa0',
+  goldD: '#a88c4f',
+  sage: '#b8c7b0',
+  text: '#2d1f14',
+  textM: '#6b5a4e',
+  textL: '#9a897c',
+};
+
+const SERIF = "'Playfair Display', Georgia, serif";
+const SANS = "'Quicksand', sans-serif";
+
+/* ── Image paths ── */
+const IMG = {
+  hero: '/hero.png',
+  flowers: '/flowers.png',
+  couple: '/couple.png',
+  letter: '/letter.png',
+  lights: '/lights.png',
+  gift: '/gift.png',
+};
+
+/* ── Data ── */
+const WISHES = [
+  { Icon: Heart, title: 'Selalu Bahagia', text: 'Semoga setiap harimu dipenuhi senyum tulus dan tawa lepas.' },
+  { Icon: Star, title: 'Mimpi Terwujud', text: 'Semoga semua impian dan cita-citamu tercapai satu per satu.' },
+  { Icon: Gem, title: 'Cinta Abadi', text: 'Semoga cinta kita tumbuh semakin kuat setiap harinya.' },
+  { Icon: Crown, title: 'Hidup Penuh Warna', text: 'Semoga hidupmu penuh petualangan baru dan momen indah.' },
+  { Icon: Compass, title: 'Sukses Selalu', text: 'Semoga tahun ini membawa pencapaian luar biasa untukmu.' },
+  { Icon: Wind, title: 'Tumbuh & Berkembang', text: 'Semoga kamu terus menjadi versi terbaik dirimu.' },
+];
+
+const MEMORIES = [
+  { Icon: GraduationCap, label: 'Seragam Kebanggaan', desc: 'Momen rapi kita pakai seragam BTP Politani, kelihatan serasi banget!', img: 'images/tak-terlupakan1.jpeg' },
+  { Icon: School, label: 'Saksi Bisu di Politani', desc: 'Berdiri manis di depan plang prodi BTP Politani Samarinda, tempat kita berjuang bersama.', img: 'images/tak-terlupakan2.jpeg' },
+  { Icon: Smile, label: 'Seru-seruan Bareng Bocil', desc: 'Pose muka jelek paling kompak bareng adik-adik gemas pas lagi ngumpul malam.', img: 'images/tak-terlupakan3.jpeg' },
+  { Icon: Bike, label: 'Boncengan Motor Seru', desc: 'Keliling kota naik motor sambil pasang muka konyol, angin sore dan tawa kita.', img: 'images/tak-terlupakan4.jpeg' },
+  { Icon: Smartphone, label: 'Mirror Selfie Lucu', desc: 'Mengabadikan senyum malu-malumu lewat pantulan layar handphone.', img: 'images/tak-terlupakan5.jpeg' },
+  { Icon: BookOpen, label: 'Muka Konyol di Kelas', desc: 'Nungguin dosen atau sela kuliah, wajib foto muka aneh biar gak ngantuk.', img: 'images/tak-terlupakan6.jpeg' },
+];
+
+const QUOTES = [
+  '"Kamu adalah alasan terbaikku untuk tersenyum setiap pagi."',
+  '"Bersamamu, setiap hari terasa seperti petualangan paling indah."',
+  '"Aku tidak perlu bintang di langit selama aku punya kamu."',
+];
+
+const CONFETTI_COLORS = [C.blush, C.blushL, C.gold, C.goldL, C.sage, C.blushD];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+function getTimeLeft() {
+  const diff = BIRTHDAY_DATE.getTime() - Date.now();
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    minutes: Math.floor((diff % 3600000) / 60000),
+    seconds: Math.floor((diff % 60000) / 1000),
+  };
+}
+function pad(n: number) { return String(n).padStart(2, '0'); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFETTI
+   ═══════════════════════════════════════════════════════════════════════════ */
+function Confetti({ active }: { active: boolean }) {
+  const [items, setItems] = useState<{ id: number; x: number; color: string; size: number; dur: number; del: number; shape: string }[]>([]);
+  useEffect(() => {
+    if (!active) { setItems([]); return; }
+    setItems(Array.from({ length: 80 }, (_, i) => ({
+      id: i, x: Math.random() * 100,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      size: 7 + Math.random() * 10,
+      dur: 2.5 + Math.random() * 3,
+      del: Math.random() * 1.8,
+      shape: ['●', '◆', '▲', '★', '■'][Math.floor(Math.random() * 5)],
+    })));
+  }, [active]);
+  if (!active || !items.length) return null;
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 999 }}>
+      {items.map(x => (
+        <span key={x.id} style={{ position: 'absolute', left: `${x.x}%`, top: '-5%', fontSize: x.size, color: x.color, animation: `confettiFall ${x.dur}s ease-in ${x.del}s forwards` }}>
+          {x.shape}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHARED UI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function SectionLabel({ text }: { text: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+      <div style={{ width: 40, height: 1.5, background: C.gold }} />
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: SANS }}>{text}</span>
+    </div>
+  );
+}
+
+function SectionTitle({ children, center }: { children: React.ReactNode; center?: boolean }) {
+  return (
+    <h2 style={{
+      fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+      fontWeight: 600, fontFamily: SERIF, fontStyle: 'italic',
+      lineHeight: 1.15, color: C.text,
+      textAlign: center ? 'center' : 'left',
+    }}>{children}</h2>
+  );
+}
+
+function CountdownBox({ value, label }: { value: number; label: string }) {
+  return (
+    <div style={{
+      minWidth: 78, padding: '18px 14px', textAlign: 'center',
+      background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)',
+      border: `1px solid ${C.warm}`,
+      borderRadius: 16,
+      boxShadow: '0 4px 16px rgba(45,31,20,0.06)',
+    }}>
+      <div style={{
+        fontSize: 32, fontWeight: 700, fontFamily: SERIF,
+        color: C.blushD, lineHeight: 1,
+        fontVariantNumeric: 'tabular-nums',
+      }} suppressHydrationWarning>{pad(value)}</div>
+      <div style={{
+        marginTop: 6, fontSize: 9, fontWeight: 700,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color: C.textL, fontFamily: SANS,
+      }}>{label}</div>
+    </div>
+  );
+}
+
+function Btn({ onClick, children, primary = true, id }: { onClick?: () => void; children: React.ReactNode; primary?: boolean; id?: string }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      id={id}
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        padding: primary ? '15px 38px' : '14px 34px',
+        borderRadius: 50,
+        border: primary ? 'none' : `1.5px solid ${hov ? C.blush : C.warm}`,
+        background: primary
+          ? `linear-gradient(135deg, ${C.blush}, ${C.blushD})`
+          : (hov ? 'rgba(212,137,154,0.06)' : 'transparent'),
+        color: primary ? '#fff' : C.text,
+        fontWeight: 700, fontSize: 15, cursor: 'pointer',
+        fontFamily: SANS, letterSpacing: '0.03em',
+        boxShadow: primary
+          ? (hov ? `0 14px 40px rgba(168,79,101,0.35)` : `0 6px 24px rgba(168,79,101,0.2)`)
+          : 'none',
+        transform: hov ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+      }}
+    >{children}</button>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HERO — full-screen with photo collage
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function HeroSection({ onCelebrate }: { onCelebrate: () => void }) {
+  const sRef = useRef<HTMLElement>(null);
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setTime(getTimeLeft());
+    const t = setInterval(() => setTime(getTimeLeft()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // GSAP entrance
+  useEffect(() => {
+    if (!sRef.current) return;
+    const ctx = gsap.context(() => {
+      const isMobile = window.innerWidth <= 768;
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+      if (isMobile) {
+        // Mobile entrance: Image first, then text elements from top to bottom
+        tl.from('[data-h="img1"]', { scale: 0.85, opacity: 0, duration: 1, ease: 'power2.out' })
+          .from('[data-h="img3"]', { scale: 0.85, y: 30, opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=0.6')
+          .from('[data-h="label"]', { x: -30, opacity: 0, duration: 0.7 }, '-=0.4')
+          .from('[data-h="title"]', { y: 30, opacity: 0, duration: 0.8 }, '-=0.5')
+          .from('[data-h="name"]', { y: 20, opacity: 0, duration: 0.7 }, '-=0.5')
+          .from('[data-h="desc"]', { y: 15, opacity: 0, duration: 0.6 }, '-=0.4')
+          .from('[data-h="cd"]', { y: 20, opacity: 0, duration: 0.7 }, '-=0.4')
+          .from('[data-h="btns"]', { y: 15, opacity: 0, duration: 0.5 }, '-=0.4');
+      } else {
+        // Desktop entrance: Text elements left, then images right
+        tl.from('[data-h="label"]', { x: -30, opacity: 0, duration: 0.7 })
+          .from('[data-h="title"]', { y: 50, opacity: 0, duration: 1 }, '-=0.3')
+          .from('[data-h="name"]', { y: 30, opacity: 0, duration: 0.8 }, '-=0.5')
+          .from('[data-h="desc"]', { y: 20, opacity: 0, duration: 0.7 }, '-=0.4')
+          .from('[data-h="cd"]', { y: 30, opacity: 0, duration: 0.8 }, '-=0.3')
+          .from('[data-h="btns"]', { y: 20, opacity: 0, duration: 0.6 }, '-=0.3')
+          .from('[data-h="img1"]', { scale: 0.85, opacity: 0, duration: 1, ease: 'power2.out' }, '-=1.2')
+          .from('[data-h="img2"]', { scale: 0.85, y: 40, opacity: 0, duration: 0.9, ease: 'power2.out' }, '-=0.7')
+          .from('[data-h="img3"]', { scale: 0.85, y: 30, opacity: 0, duration: 0.8, ease: 'power2.out' }, '-=0.5');
+      }
+
+      // Parallax
+      gsap.to('[data-h="img1"]', { y: -40, scrollTrigger: { trigger: sRef.current, start: 'top top', end: 'bottom top', scrub: true } });
+      gsap.to('[data-h="img2"]', { y: -25, scrollTrigger: { trigger: sRef.current, start: 'top top', end: 'bottom top', scrub: true } });
+    }, sRef);
+    return () => ctx.revert();
+  }, []);
+
+  const isBday = mounted && Object.values(time).every(v => v === 0);
+
+  return (
+    <section ref={sRef} id="hero" style={{
+      position: 'relative', minHeight: '100vh',
+      display: 'flex', alignItems: 'center',
+      padding: '80px 5vw',
+      overflow: 'hidden',
+      background: C.bg,
+    }}>
+      {/* Decorative shape */}
+      <div style={{ position: 'absolute', top: '-15%', right: '-10%', width: '60vw', height: '60vw', borderRadius: '50%', background: `linear-gradient(135deg, ${C.blushL}40, ${C.goldL}30)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', left: '-8%', width: '40vw', height: '40vw', borderRadius: '50%', background: `linear-gradient(135deg, ${C.sage}30, ${C.cream})`, filter: 'blur(60px)', pointerEvents: 'none' }} />
+
+      <div className="hero-grid" style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(32px, 5vw, 80px)',
+        maxWidth: 1200, margin: '0 auto', width: '100%',
+        alignItems: 'center',
+      }}>
+        {/* Left — Text */}
+        <div>
+          <div data-h="label"><SectionLabel text="Happy Birthday" /></div>
+
+          <h1 data-h="title" style={{
+            fontSize: 'clamp(3rem, 7vw, 5.5rem)',
+            fontWeight: 600, fontFamily: SERIF, fontStyle: 'italic',
+            lineHeight: 1.05, color: C.text,
+            marginBottom: 8,
+          }}>
+            Selamat<br />Ulang Tahun
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+
+          <h2 data-h="name" style={{
+            fontSize: 'clamp(1.5rem, 3.5vw, 2.8rem)',
+            fontWeight: 600, fontFamily: SERIF,
+            color: C.blush, marginBottom: 24,
+          }}>{NAME}</h2>
+
+          <p data-h="desc" style={{
+            fontSize: 'clamp(14px, 1.8vw, 17px)',
+            lineHeight: 1.85, color: C.textM,
+            maxWidth: 420, marginBottom: 32,
+            fontFamily: SANS,
+          }}>
+            Di hari yang paling spesial ini, aku ingin kamu tahu betapa berarti
+            dan berharganya kamu dalam hidupku. Kamu adalah hadiah terindahku.
+          </p>
+
+          <audio autoPlay loop>
+            <source src="/images/music.mp3" type="audio/mpeg" />
+          </audio>
+
+          <div data-h="btns" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Btn id="celebrate-btn" onClick={onCelebrate} primary>
+              <PartyPopper size={16} /> Rayakan!
+            </Btn>
+            <Btn onClick={() => document.getElementById('letter')?.scrollIntoView({ behavior: 'smooth' })} primary={false}>
+              <Mail size={16} /> Baca Suratku
+            </Btn>
+          </div>
+        </div>
+
+        <div
+          className="hero-photos"
+          style={{
+            position: "relative",
+            height: "clamp(450px, 65vh, 700px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* Glow Background */}
+          <div
+            style={{
+              position: "absolute",
+              width: 380,
+              height: 380,
+              borderRadius: "50%",
+              background: "rgba(255,182,193,.25)",
+              filter: "blur(80px)",
+              zIndex: 0,
+            }}
+          />
+
+          {/* Main Image */}
+          <div
+            data-h="img1"
+            style={{
+              width: "70%",
+              height: "75%",
+              overflow: "hidden",
+              borderRadius: "58% 42% 63% 37% / 38% 62% 38% 62%",
+              boxShadow: "0 25px 60px rgba(0,0,0,.18)",
+              position: "relative",
+              zIndex: 3,
+            }}
+          >
+            <img
+              src="images/head.jpeg"
+              alt=""
+              className="img-cover"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "bottom"
+              }}
+            />
+          </div>
+
+          {/* Heart Badge */}
+          <div
+            data-h="img3"
+            style={{
+              position: 'absolute',
+              top: '5%',
+              right: '12%',
+              width: 90,
+              height: 90,
+              borderRadius: '50%',
+              background:
+                'linear-gradient(135deg,#ff8fa3,#ff4d6d)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 12px 35px rgba(255,77,109,.35)',
+              zIndex: 5,
+              animation: 'float 4s ease-in-out infinite',
+            }}
+          >
+            <Heart size={34} fill="#fff" color="#fff" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FULL-WIDTH PHOTO BANNER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function PhotoBanner({ src, alt, height = 400 }: { src: string; alt: string; height?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from(ref.current!, {
+        scaleY: 0.8, opacity: 0, duration: 1,
+        scrollTrigger: { trigger: ref.current, start: 'top 85%' },
+        ease: 'power3.out',
+      });
+      gsap.to(ref.current!.querySelector('img'), {
+        y: -30,
+        scrollTrigger: { trigger: ref.current, start: 'top bottom', end: 'bottom top', scrub: true },
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div ref={ref} style={{
+      width: '100%', height, overflow: 'hidden', position: 'relative',
+    }}>
+      <img src={src} alt={alt} style={{
+        width: '100%', height: '120%', objectFit: 'cover',
+        display: 'block', position: 'absolute', top: 0, left: 0,
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(to bottom, rgba(250,246,241,0.3), rgba(250,246,241,0.1) 40%, rgba(250,246,241,0.3))',
+      }} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOVE LETTER — Envelope opening animation (both elements always in DOM)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function LetterSection() {
+  const ref = useRef<HTMLElement>(null);
+  // Envelope refs
+  const envelopeWrapRef = useRef<HTMLDivElement>(null);
+  const flapRef = useRef<HTMLDivElement>(null);
+  // Letter paper ref
+  const letterRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<'closed' | 'opening' | 'open'>('closed');
+
+  // Scroll entrance animations
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from('[data-lt="photo"]', {
+        x: -60, opacity: 0, duration: 1,
+        scrollTrigger: { trigger: ref.current, start: 'top 70%' },
+        ease: 'power3.out',
+      });
+      gsap.from('[data-lt="text"]', {
+        x: 60, opacity: 0, duration: 1,
+        scrollTrigger: { trigger: ref.current, start: 'top 70%' },
+        ease: 'power3.out', delay: 0.2,
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  // Set initial hidden state for letter paper (always in DOM)
+  useEffect(() => {
+    if (letterRef.current) {
+      gsap.set(letterRef.current, { y: 80, opacity: 0, scale: 0.94 });
+    }
+    // Hide letter lines initially
+    const lines = document.querySelectorAll('[data-letter-line]');
+    if (lines.length) gsap.set(lines, { opacity: 0, y: 16 });
+  }, []);
+
+  const handleOpen = () => {
+    if (phase !== 'closed') return;
+    setPhase('opening');
+
+    const tl = gsap.timeline({ onComplete: () => setPhase('open') });
+
+    // 1. Envelope jiggles left-right
+    tl.to(envelopeWrapRef.current, { rotation: -3, duration: 0.13, ease: 'power1.inOut' })
+      .to(envelopeWrapRef.current, { rotation: 3, duration: 0.13, ease: 'power1.inOut' })
+      .to(envelopeWrapRef.current, { rotation: -2, duration: 0.1, ease: 'power1.inOut' })
+      .to(envelopeWrapRef.current, { rotation: 0, duration: 0.1, ease: 'power1.inOut' })
+
+      // 2. Flap folds open via 3D rotateX (hinge at top edge)
+      .to(flapRef.current, {
+        rotateX: -175,
+        duration: 0.9,
+        ease: 'power2.inOut',
+      }, '+=0.08')
+
+      // 3. Letter paper rises up from inside the envelope
+      .to(letterRef.current, {
+        y: 0, opacity: 1, scale: 1,
+        duration: 0.8, ease: 'power3.out',
+      }, '-=0.35')
+
+      // 4. Envelope fades away as letter fully appears
+      .to(envelopeWrapRef.current, {
+        opacity: 0, y: 24, scale: 0.96,
+        duration: 0.4, ease: 'power2.in',
+      }, '-=0.2')
+
+      // 5. Letter content lines stagger in
+      .to('[data-letter-line]', {
+        opacity: 1, y: 0,
+        duration: 0.45, stagger: 0.09, ease: 'power2.out',
+      }, '-=0.1');
+  };
+
+  return (
+    <section ref={ref} id="letter" style={{
+      padding: '120px 5vw', overflow: 'hidden',
+      background: C.cream,
+    }}>
+      <div className="split-section" style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(40px, 6vw, 88px)',
+        maxWidth: 1100, margin: '0 auto', alignItems: 'center',
+      }}>
+        {/* ── Photo side ── */}
+        <div data-lt="photo" className="polaroid-card" style={{
+          transform: 'rotate(-2deg)',
+          padding: '16px 16px 22px 16px',
+          background: '#fff',
+          boxShadow: '0 12px 32px rgba(45,31,20,0.08)',
+        }}>
+          <div className="polaroid-washi" style={{ background: 'rgba(212,137,154,0.28)' }} />
+          <div className="polaroid-photo" style={{ height: 'clamp(320px, 45vh, 460px)' }}>
+            <img src='images/surat.jpeg' alt="Love letter" className="img-cover" />
+          </div>
+          <div className="polaroid-caption" style={{ marginTop: 12 }}>
+            <h3 className="polaroid-title" style={{ fontSize: 15, marginBottom: 2 }}>Ditulis Dengan Hati</h3>
+            <p className="polaroid-desc" style={{ fontSize: 12 }}>Sebuah pesan rahasia untukmu</p>
+          </div>
+        </div>
+
+        {/* ── Text side ── */}
+        <div data-lt="text">
+          <SectionLabel text="Khusus Untukmu" />
+          <SectionTitle>Sepucuk<br />Surat Cinta</SectionTitle>
+          <p style={{ marginTop: 16, fontSize: 15, lineHeight: 1.8, color: C.textM, marginBottom: 28, fontFamily: SANS }}>
+            Aku menulis ini dari hati yang paling dalam untukmu...
+          </p>
+
+          {/*
+            IMPORTANT: Both envelope and letter paper are ALWAYS in the DOM.
+            GSAP controls visibility — the letter starts hidden (set in useEffect),
+            and GSAP slides it up while fading the envelope out.
+          */}
+          <div style={{ position: 'relative', perspective: 900 }}>
+
+            {/* ════ ENVELOPE ════ */}
+            <div
+              ref={envelopeWrapRef}
+              onClick={handleOpen}
+              style={{
+                position: 'relative',
+                cursor: phase === 'closed' ? 'pointer' : 'default',
+                userSelect: 'none',
+                display: phase === 'open' ? 'none' : 'block',
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {/* Envelope body */}
+              <div style={{
+                position: 'relative',
+                background: 'linear-gradient(160deg, #fdf6ec 0%, #fef0e0 100%)',
+                border: `1.5px solid ${C.warm}`,
+                borderRadius: '4px 4px 14px 14px',
+                boxShadow: '0 14px 40px rgba(45,31,20,0.10), 0 2px 6px rgba(45,31,20,0.06)',
+                overflow: 'visible',
+              }}>
+
+                {/* Inner V-fold decoration */}
+                <svg viewBox="0 0 400 200" style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  pointerEvents: 'none', zIndex: 1, borderRadius: '4px 4px 14px 14px',
+                }} preserveAspectRatio="none">
+                  <polygon points="0,0 200,118 0,200" fill={`${C.goldL}28`} stroke={C.warm} strokeWidth="0.8" />
+                  <polygon points="400,0 200,118 400,200" fill={`${C.goldL}28`} stroke={C.warm} strokeWidth="0.8" />
+                  <polygon points="0,200 200,118 400,200" fill={`${C.blushL}20`} stroke={C.warm} strokeWidth="0.8" />
+                </svg>
+
+                {/* Postage stamp */}
+                <div style={{
+                  position: 'absolute', top: 16, right: 20, zIndex: 10,
+                  width: 50, height: 60, border: `2px dashed ${C.gold}`,
+                  borderRadius: 4, background: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transform: 'rotate(4deg)',
+                  boxShadow: '0 2px 6px rgba(45,31,20,0.08)',
+                }}>
+                  <Heart size={18} fill={C.blush} style={{ color: C.blush }} />
+                </div>
+
+                {/* Address lines (decorative) */}
+                <div style={{ position: 'absolute', bottom: 24, left: 24, zIndex: 10 }}>
+                  {[28, 64, 52].map((w, i) => (
+                    <div key={i} style={{
+                      width: w, height: 1.5, borderRadius: 2, marginBottom: 5,
+                      background: i === 0 ? C.gold : C.textL,
+                      opacity: 0.45 + i * 0.18,
+                    }} />
+                  ))}
+                </div>
+
+                {/* ── FLAP (hinged at top edge, 3D rotateX) ── */}
+                <div
+                  ref={flapRef}
+                  style={{
+                    position: 'absolute', top: 0, left: 0, right: 0,
+                    transformOrigin: 'top center',
+                    transformStyle: 'preserve-3d',
+                    zIndex: 20,
+                  }}
+                >
+                  {/* Flap triangle shape */}
+                  <svg viewBox="0 0 400 175"
+                    style={{ width: '100%', display: 'block', filter: 'drop-shadow(0 3px 8px rgba(45,31,20,0.10))' }}
+                    preserveAspectRatio="none"
+                  >
+                    <polygon points="0,0 400,0 200,145" fill="#fef5e7" stroke={C.warm} strokeWidth="1" />
+                    <line x1="0" y1="1" x2="400" y2="1" stroke={C.warm} strokeWidth="1.5" />
+                  </svg>
+
+                  {/* Wax seal on flap */}
+                  <div style={{
+                    position: 'absolute', bottom: 8, left: '50%',
+                    transform: 'translateX(-50%)', zIndex: 25,
+                  }}>
+                    <div style={{
+                      width: 66, height: 66, borderRadius: '50%',
+                      background: `radial-gradient(circle at 36% 36%, ${C.blush}, ${C.blushD})`,
+                      border: '3px solid #fff8f0',
+                      boxShadow: `0 6px 22px rgba(168,79,101,0.48), inset 0 1px 3px rgba(255,255,255,0.35)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      animation: phase === 'closed' ? 'pulseGlow 2.5s ease-in-out infinite' : 'none',
+                    }}>
+                      <Heart size={24} fill="#fff" style={{ color: '#fff', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Envelope body text ── */}
+                <div style={{
+                  position: 'relative', zIndex: 2, textAlign: 'center',
+                  padding: 'clamp(28px,5vw,48px) clamp(20px,4vw,32px)',
+                  paddingTop: 'clamp(90px,16vw,130px)',
+                  paddingBottom: 'clamp(44px,6vw,68px)',
+                  minHeight: 240,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <p style={{
+                    visibility: 'hidden', fontSize: 10, fontWeight: 700, letterSpacing: '0.24em',
+                    textTransform: 'uppercase', color: C.gold, fontFamily: SANS, marginBottom: 10,
+                  }}>✦ Surat Cinta Tersegel ✦</p>
+
+                  <h3 style={{
+                    visibility: 'hidden', fontSize: 'clamp(18px, 3vw, 23px)', fontFamily: SERIF,
+                    fontStyle: 'italic', fontWeight: 600, color: C.text, marginBottom: 6,
+                    lineHeight: 1.3,
+                  }}>Teruntuk Sayangku ❤️</h3>
+
+                  <p style={{ visibility: 'hidden', fontSize: 13, color: C.textL, fontFamily: SANS, marginBottom: 20, lineHeight: 1.6 }}>
+                    Sebuah pesan yang ditulis dengan seluruh hati...
+                  </p>
+
+                  {/* Animated click hint */}
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    animation: phase === 'closed' ? 'floatY 2s ease-in-out infinite' : 'none',
+                  }}>
+                    <Mail size={18} style={{ color: C.blush, opacity: 0.7 }} />
+                    <p style={{
+                      fontSize: 11, color: C.textL, fontFamily: SANS,
+                      letterSpacing: '0.06em',
+                    }}>
+                      {phase === 'opening' ? '✦ Membuka surat...' : 'Klik untuk membuka segel'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ════ LETTER PAPER (always in DOM, initially hidden via GSAP) ════ */}
+            <div
+              ref={letterRef}
+              style={{
+                position: phase === 'open' ? 'relative' : 'absolute',
+                top: 0, left: 0, right: 0,
+                background: '#fffefb',
+                border: `1.5px solid ${C.warm}`,
+                borderRadius: 16,
+                boxShadow: '0 20px 64px rgba(45,31,20,0.10)',
+                overflow: 'hidden',
+                pointerEvents: phase === 'open' ? 'auto' : 'none',
+              }}
             >
-              Learning
-            </a>{" "}
-            center.
+              {/* Notebook ruled lines */}
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                backgroundImage: `repeating-linear-gradient(transparent, transparent 31px, ${C.blushL}38 32px)`,
+                backgroundPositionY: 66,
+              }} />
+              {/* Left margin red line */}
+              <div style={{
+                position: 'absolute', top: 0, bottom: 0, left: 48,
+                borderLeft: `1.5px solid rgba(212,137,154,0.22)`,
+              }} />
+
+              <div style={{ padding: 'clamp(24px,4vw,44px)', paddingLeft: 'clamp(42px,6vw,70px)', position: 'relative', zIndex: 2 }}>
+                {/* Greeting header */}
+                <div data-letter-line style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <Flower2 size={18} style={{ color: C.blush }} />
+                  <p style={{ fontSize: 16, fontWeight: 600, fontFamily: SERIF, fontStyle: 'italic', color: C.blushD }}>
+                    Teruntuk {NAME} Tersayang
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 15, lineHeight: 1.95, color: C.textM, fontFamily: SANS }}>
+                  <p data-letter-line>
+                    Selamat Happy Birthday my dear 🥳🎂,{" "}
+                    <Heart
+                      size={13}
+                      fill={C.blush}
+                      style={{ color: C.blush, display: "inline", verticalAlign: "middle" }}
+                    />
+                  </p>
+
+                  <p data-letter-line style={{ color: C.text }}>
+                    Semoga dengan bertambahnya umur kamu yang sekarang sudah menginjak angka 20,
+                    aku harap kebahagiaan akan selalu menyertai kamu dan cita-cita yang kamu
+                    inginkan bisa cepat terwujud. ❤️
+                  </p>
+
+                  <p data-letter-line>
+                    Apa pun yang diinginkan sekarang semoga bisa segera tercapai. Jadi orang yang
+                    lebih baik lagi ke depannya, sukses di masa depan, sukses di dunia maupun
+                    akhirat, serta selalu menjadi pribadi yang baik hati dan bijaksana. 🎇🎇
+                  </p>
+
+                  <p data-letter-line style={{ color: C.text }}>
+                    Aku selalu berdoa untuk kamu, apa pun itu. Aku akan selalu mendukung setiap
+                    keputusan dan keinginanmu. Selamat ya sayang, aku sayang kamu. Have fun untuk
+                    segalanya! 🎇🎉🎊🎂
+                  </p>
+
+                  {/* Signature */}
+                  <div data-letter-line style={{
+                    marginTop: 16, paddingTop: 16,
+                    borderTop: `1px dashed ${C.warm}`,
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+                  }}>
+                    <div>
+                      <p style={{ fontSize: 11, color: C.textL, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Dengan Seluruh Cintaku,</p>
+                      <span style={{ fontFamily: SERIF, fontSize: '1.45em', fontStyle: 'italic', color: C.blushD, fontWeight: 600 }}>{SENDER_NAME}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {[Heart, Sparkles, Heart].map((Ic, i) => (
+                        <Ic key={i} size={i === 1 ? 16 : 12} fill={i !== 1 ? C.blush : 'none'}
+                          style={{ color: C.blush, animation: `floatY ${2 + i * 0.4}s ease-in-out infinite` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEMORIES — photo cards with overlay text
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function MemoriesSection() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      // Header entrance
+      gsap.from('[data-m="header"] > *', {
+        y: 40, opacity: 0, stagger: 0.15, duration: 0.8,
+        scrollTrigger: { trigger: '[data-m="header"]', start: 'top 80%' },
+        ease: 'power3.out',
+      });
+      // Cards — staggered reveal as they enter viewport
+      gsap.utils.toArray<HTMLElement>('[data-m="timeline-item"]').forEach((el) => {
+        const isLeft = el.classList.contains('timeline-left');
+        const card = el.querySelector('[data-m="card"]');
+        const dot = el.querySelector('[data-m="dot"]');
+        const connector = el.querySelector('[data-m="connector"]');
+
+        gsap.from(card, {
+          x: isLeft ? -50 : 50,
+          opacity: 0,
+          duration: 0.85,
+          scrollTrigger: { trigger: el, start: 'top 85%' },
+          ease: 'power3.out',
+        });
+
+        gsap.from(dot, {
+          scale: 0,
+          opacity: 0,
+          duration: 0.6,
+          scrollTrigger: { trigger: el, start: 'top 85%' },
+          ease: 'back.out(1.7)',
+        });
+
+        if (connector) {
+          gsap.from(connector, {
+            scaleX: 0,
+            opacity: 0,
+            transformOrigin: isLeft ? 'right center' : 'left center',
+            duration: 0.5,
+            scrollTrigger: { trigger: el, start: 'top 85%' },
+            ease: 'power2.out',
+            delay: 0.2,
+          });
+        }
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={ref} id="memories" style={{ padding: '120px 5vw', background: C.bg, position: 'relative', overflow: 'hidden' }}>
+      {/* Decorative background gradients */}
+      <div style={{ position: 'absolute', top: '10%', left: '-5%', width: '30vw', height: '30vw', borderRadius: '50%', background: `radial-gradient(circle, ${C.blushL}15, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '10%', right: '-5%', width: '35vw', height: '35vw', borderRadius: '50%', background: `radial-gradient(circle, ${C.goldL}12, transparent 70%)`, pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: 1060, margin: '0 auto', position: 'relative', zIndex: 5 }}>
+        {/* Header */}
+        <div data-m="header" style={{ textAlign: 'center', marginBottom: 72 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 1.5, background: C.gold }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: SANS }}>Kenangan Kita</span>
+            <div style={{ width: 40, height: 1.5, background: C.gold }} />
+          </div>
+          <SectionTitle center>Momen Tak Terlupakan</SectionTitle>
+          <p style={{ marginTop: 14, fontSize: 15, color: C.textM, fontFamily: SANS, maxWidth: 460, margin: '14px auto 0', lineHeight: 1.6 }}>
+            Setiap detik bersamamu adalah lembaran berharga dalam buku hidupku.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Timeline container */}
+        <div className="timeline-container">
+          {/* Vertical line */}
+          <div className="timeline-line" />
+
+          {MEMORIES.map(({ Icon, label, desc, img }, i) => {
+            const isLeft = i % 2 === 0;
+            const rotateDeg = i % 3 === 0 ? -2.5 : i % 3 === 1 ? 2 : -1.5;
+
+            return (
+              <div
+                key={i}
+                data-m="timeline-item"
+                className={`timeline-item ${isLeft ? 'timeline-left' : 'timeline-right'}`}
+              >
+                {/* Side with Polaroid Card */}
+                <div className="timeline-side">
+                  <div
+                    data-m="card"
+                    className="polaroid-card"
+                    style={{ transform: `rotate(${rotateDeg}deg)` }}
+                  >
+                    {/* Washi Tape */}
+                    <div className="polaroid-washi" />
+
+                    {/* Pin Icon indicator */}
+                    <div className="polaroid-icon-pin">
+                      <Icon size={16} />
+                    </div>
+
+                    {/* Polaroid Photo Frame */}
+                    <div className="polaroid-photo">
+                      <img src={img} alt={label} />
+                    </div>
+
+                    {/* Polaroid Caption */}
+                    <div className="polaroid-caption">
+                      <h3 className="polaroid-title">{label}</h3>
+                      <p className="polaroid-desc">{desc}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center dot */}
+                <div className="timeline-center">
+                  <div data-m="dot" className="timeline-dot" />
+                </div>
+
+                {/* Connector line (direct child of timeline-item for percentage-based positioning) */}
+                <div data-m="connector" className="timeline-connector" />
+
+                {/* Spacing spacer side */}
+                <div className="timeline-side timeline-spacer" style={{ pointerEvents: 'none' }} />
+              </div>
+            );
+          })}
         </div>
-      </main>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WISHES — icon + text cards
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function WishesSection() {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from('[data-w="header"] > *', {
+        y: 40, opacity: 0, stagger: 0.15, duration: 0.8,
+        scrollTrigger: { trigger: '[data-w="header"]', start: 'top 80%' },
+        ease: 'power3.out',
+      });
+      gsap.utils.toArray<HTMLElement>('[data-w="card"]').forEach((el, i) => {
+        gsap.from(el, {
+          y: 50, opacity: 0, duration: 0.7, delay: i * 0.08,
+          scrollTrigger: { trigger: el, start: 'top 88%' },
+          ease: 'power3.out',
+        });
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={ref} id="wishes" style={{ padding: '120px 5vw', background: C.cream, position: 'relative', overflow: 'hidden' }}>
+      {/* Background floating element decorations */}
+      <Heart size={16} style={{ position: 'absolute', top: '15%', left: '8%', color: C.blush, opacity: 0.12, animation: 'floatY 6s ease-in-out infinite' }} />
+      <Star size={14} style={{ position: 'absolute', top: '25%', right: '10%', color: C.gold, opacity: 0.12, animation: 'floatY 8s ease-in-out 1s infinite' }} />
+      <Sparkles size={18} style={{ position: 'absolute', bottom: '15%', left: '12%', color: C.blushL, opacity: 0.16, animation: 'floatY 7s ease-in-out 0.5s infinite' }} />
+      <Gem size={14} style={{ position: 'absolute', bottom: '20%', right: '15%', color: C.goldL, opacity: 0.12, animation: 'floatY 9s ease-in-out 1.5s infinite' }} />
+
+      <div style={{ maxWidth: 1060, margin: '0 auto', position: 'relative', zIndex: 5 }}>
+        {/* Header */}
+        <div data-w="header" style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 1.5, background: C.gold }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, fontFamily: SANS }}>Harapan & Doa</span>
+            <div style={{ width: 40, height: 1.5, background: C.gold }} />
+          </div>
+          <SectionTitle center>Seribu Harapan Untukmu</SectionTitle>
+          <p style={{ marginTop: 14, fontSize: 15, color: C.textM, fontFamily: SANS, maxWidth: 440, margin: '14px auto 0', lineHeight: 1.6 }}>
+            Doa-doa terbaik yang kupanjatkan di setiap hembusan napas untuk kebahagiaanmu.
+          </p>
+        </div>
+
+        {/* Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 24 }}>
+          {WISHES.map(({ Icon, title, text }, i) => (
+            <div
+              key={i}
+              data-w="card"
+              className="wish-card"
+            >
+              {/* Overlay number */}
+              <div className="wish-card-number">
+                {`0${i + 1}`}
+              </div>
+
+              {/* Icon tab */}
+              <div className="wish-icon-container">
+                <Icon size={22} style={{ color: C.blushD, strokeWidth: 1.5 }} />
+              </div>
+
+              {/* Title & Description */}
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text, fontFamily: SANS, marginBottom: 10 }}>{title}</h3>
+              <p style={{ fontSize: 13.5, lineHeight: 1.75, color: C.textM, fontFamily: SANS }}>{text}</p>
+
+              {/* Bottom slide-out line decoration */}
+              <div className="wish-card-line" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHOTO GALLERY — Premium Bento + Lightbox with Thumbnail Strip
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Gallery data with span information for masonry feel ── */
+const GALLERY_ITEMS = [
+  {
+    src: 'images/momen-indah1.jpeg',
+    label: 'Kencan Malam Estetik', desc: 'Kamu berpose manis di depan cafe berlampu hangat kesukaan kita.',
+    Icon: Coffee, accent: '#b8c7b0', tag: 'Momen', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah-video.mp4',
+    label: 'Keseruan Hari-Hari Kita', desc: 'Setiap detik bersamamu selalu penuh canda tawa dan kebahagiaan.',
+    Icon: Play, accent: '#d4899a', tag: 'Spesial', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah2.jpeg',
+    label: 'Senyum Manismu', desc: 'Kolase selfie favorit yang selalu sukses bikin hatiku berdebar.',
+    Icon: Camera, accent: '#d4899a', tag: 'Cinta', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah3.jpeg',
+    label: 'Pout Gemas di Mobil', desc: 'Muka cemberut imut kamu pas lagi di perjalanan, gak pernah bosen lihatnya.',
+    Icon: MapPin, accent: '#e8a07a', tag: 'Jalan-jalan', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah4.jpeg',
+    label: 'Pose Tunjuk Pipi', desc: 'Gaya andalan kamu yang selalu sukses bikin aku tersenyum sendiri.',
+    Icon: Heart, accent: '#e8b4b8', tag: 'Cinta', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah5.jpeg',
+    label: 'Golden Hour di Mobil', desc: 'Cahaya matahari sore menerpa wajah cantikmu pas kita jalan-jalan.',
+    Icon: Sun, accent: '#f0c87a', tag: 'Jalan-jalan', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah6.jpeg',
+    label: 'Senyum dan Pose Peace', desc: 'Dua pose senyum dan dua pose lucu lengkap dengan cincin pesawat kesayanganmu.',
+    Icon: Sparkles, accent: '#b8c7b0', tag: 'Momen', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah7.jpeg',
+    label: 'Cantik dengan Kupu-kupu', desc: 'Pesona manis kamu dengan filter kupu-kupu biru di hijab gelapmu.',
+    Icon: Gem, accent: '#4a6b82', tag: 'Cinta', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah8.jpeg',
+    label: 'Selfie Jalan Sore', desc: 'Gaya santai kamu pas jalan sore sambil pegang charger, lucu dan gemas!',
+    Icon: Zap, accent: '#b8c7b0', tag: 'Jalan-jalan', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah9.jpeg',
+    label: 'Senyum Teduhmu', desc: 'Tatapan hangat dan senyum manis yang selalu menenangkan hariku.',
+    Icon: Heart, accent: '#e8b4b8', tag: 'Cinta', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah10.jpeg',
+    label: 'Filter Puppy Lucu', desc: 'Pose gemas pakai filter anak anjing saat sedang memakai seragam dinas.',
+    Icon: Smile, accent: '#5c7c8a', tag: 'Spesial', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah11.jpeg',
+    label: 'Senja di Atas Kapal', desc: 'Keindahan matahari terbenam dari atas dek kapal, kamu terlihat begitu anggun.',
+    Icon: Compass, accent: '#f0c87a', tag: 'Jalan-jalan', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah12.jpeg',
+    label: 'Malam Indah Berbunga', desc: 'Kamu tersenyum manis memegang bunga pemberianku di malam yang syahdu.',
+    Icon: Flower2, accent: '#d4899a', tag: 'Cinta', rowSpan: 1,
+  },
+  {
+    src: 'images/momen-indah13.jpeg',
+    label: 'Malu-malu di Kelas', desc: 'Ekspresi malu-malu kucing saat aku potret di kelas, gemas banget!',
+    Icon: BookOpen, accent: '#c9a96e', tag: 'Momen', rowSpan: 2,
+  },
+  {
+    src: 'images/momen-indah14.jpeg',
+    label: 'Pose Gemas di Cafe', desc: 'Gaya lucu andalanmu dengan tangan di kepala, selalu menawan dan menggemaskan.',
+    Icon: Camera, accent: '#b8c7b0', tag: 'Momen', rowSpan: 1,
+  },
+];
+
+const GALLERY_TAGS = ['Semua', 'Spesial', 'Cinta', 'Momen', 'Jalan-jalan'];
+
+/* ── Lightbox ── */
+function GalleryLightbox({ images, current, onClose, onNav }: {
+  images: typeof GALLERY_ITEMS; current: number;
+  onClose: () => void; onNav: (dir: number) => void;
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<any>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
+  const item = images[current];
+
+  /* ── Cute Entrance Animation ── */
+  useEffect(() => {
+    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.38, ease: 'power2.out' });
+    gsap.fromTo(panelRef.current,
+      { y: 60, scale: 0.9, rotate: -2, opacity: 0 },
+      { y: 0, scale: 1, rotate: 0, opacity: 1, duration: 0.65, ease: 'back.out(1.4)', delay: 0.05 }
+    );
+  }, []);
+
+  /* ── Photo transition on nav ── */
+  useEffect(() => {
+    gsap.fromTo(imgRef.current,
+      { opacity: 0, scale: 0.92, rotate: -3 },
+      { opacity: 1, scale: 1, rotate: 0, duration: 0.45, ease: 'back.out(1.2)' }
+    );
+    gsap.fromTo(infoRef.current,
+      { opacity: 0, y: 12 },
+      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 }
+    );
+  }, [current]);
+
+  /* ── Keyboard ── */
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onNav(1);
+      if (e.key === 'ArrowLeft') onNav(-1);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose, onNav]);
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={onClose}
+      className="cute-lightbox-overlay"
+    >
+      {/* ── Main panel ── */}
+      <div
+        ref={panelRef}
+        onClick={e => e.stopPropagation()}
+        className="cute-lightbox-panel"
+      >
+        {/* Floating Close Button */}
+        <button
+          onClick={onClose}
+          className="cute-lightbox-close-btn"
+          title="Tutup"
+        >
+          <X size={18} />
+        </button>
+
+        {/* ═══ LEFT/TOP — Polaroid Photo Section ═══ */}
+        <div className="cute-lightbox-photo-sec">
+          {/* Decorative Sparkles & Hearts floating in bg */}
+          <Heart size={14} style={{ position: 'absolute', top: '15%', left: '10%', color: '#f5d5d5', opacity: 0.6, transform: 'rotate(-15deg)' }} />
+          <Sparkles size={16} style={{ position: 'absolute', bottom: '15%', right: '12%', color: '#e6cfa0', opacity: 0.5 }} />
+
+          {/* Polaroid Frame */}
+          <div className="cute-polaroid-frame">
+            {/* Washi Tape Deco */}
+            <div style={{
+              position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%) rotate(2deg)',
+              width: 76, height: 20, background: 'rgba(212, 137, 154, 0.25)',
+              borderLeft: '1.5px dashed rgba(255,255,255,0.4)', borderRight: '1.5px dashed rgba(255,255,255,0.4)',
+              boxShadow: '0 1px 2px rgba(45, 31, 20, 0.05)',
+            }} />
+
+            {item.src.endsWith('.mp4') ? (
+              <video
+                ref={imgRef}
+                src={item.src}
+                controls
+                autoPlay
+                playsInline
+                className="cute-polaroid-photo"
+                style={{ objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <img
+                ref={imgRef}
+                src={item.src}
+                alt={item.label}
+                className="cute-polaroid-photo"
+              />
+            )}
+
+            <div className="cute-polaroid-caption">
+              <span>🧸 {item.label}</span>
+            </div>
+          </div>
+
+          {/* Prev Button */}
+          <button
+            onClick={() => onNav(-1)}
+            className="cute-lightbox-btn prev"
+            title="Sebelumnya"
+          >
+            <ChevronLeft size={22} />
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={() => onNav(1)}
+            className="cute-lightbox-btn next"
+            title="Selanjutnya"
+          >
+            <ChevronRight size={22} />
+          </button>
+
+          {/* Cute Progress bar */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, background: '#fff0f2' }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.round(((current + 1) / images.length) * 100)}%`,
+              background: `linear-gradient(90deg, #d4899a, #c9a96e)`,
+              transition: 'width 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            }} />
+          </div>
+        </div>
+
+        {/* ═══ RIGHT/BOTTOM — Info Panel ═══ */}
+        <div
+          ref={infoRef}
+          className="cute-lightbox-info-sec"
+          style={{ justifyContent: 'space-between' }}
+        >
+          {/* Top Half */}
+          <div>
+            {/* Sticker Badge + Tag info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                background: `linear-gradient(135deg, ${item.accent}25, ${item.accent}08)`,
+                border: `2px dashed ${item.accent}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 8px 20px ${item.accent}15`,
+              }}>
+                <item.Icon size={18} style={{ color: item.accent }} />
+              </div>
+              <div>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+                  padding: '3px 10px', borderRadius: 12,
+                  background: `${item.accent}18`, color: item.accent,
+                  fontFamily: SANS, border: `1px solid ${item.accent}30`
+                }}>
+                  🎀 {item.tag}
+                </span>
+                <p style={{ fontSize: 10, color: '#9a897c', fontFamily: SANS, marginTop: 4 }}>kenangan manis kita ✦</p>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 style={{
+              fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600,
+              fontSize: 'clamp(1.4rem, 2.5vw, 1.85rem)',
+              color: '#a84f65', lineHeight: 1.25, marginBottom: 10,
+            }}>
+              {item.label}
+            </h2>
+
+            {/* Decorative Heart Line */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+              <div style={{ width: 24, height: 1.5, background: '#f5d5d5' }} />
+              <span style={{ fontSize: 10, color: '#d4899a' }}>♥</span>
+              <div style={{ flex: 1, height: 1.5, background: `linear-gradient(90deg, #f5d5d5, transparent)` }} />
+            </div>
+
+            {/* Description */}
+            <p style={{ fontSize: 13, lineHeight: 1.8, color: '#6b5a4e', fontFamily: SANS }}>
+              {item.desc}
+            </p>
+          </div>
+
+          {/* Bottom Half */}
+          <div style={{ marginTop: 24 }}>
+            {/* Cute Large Counter */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
+              <span style={{ fontFamily: SERIF, fontWeight: 700, fontSize: '2.8rem', lineHeight: 1, color: '#d4899a' }}>
+                {String(current + 1).padStart(2, '0')}
+              </span>
+              <span style={{ fontSize: 13, color: '#c9a96e', fontFamily: SANS }}>/ {String(images.length).padStart(2, '0')}</span>
+            </div>
+
+            {/* Pill Dots Navigator */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+              {images.map((_, i) => (
+                <button key={i} onClick={() => onNav(i - current)} style={{
+                  height: 6, borderRadius: 3, border: 'none', outline: 'none', padding: 0, cursor: 'pointer',
+                  width: i === current ? 22 : 6,
+                  background: i === current ? `linear-gradient(90deg, #d4899a, #c9a96e)` : '#e8dfd3',
+                  boxShadow: i === current ? `0 0 10px rgba(212, 137, 154, 0.4)` : 'none',
+                  transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                }} />
+              ))}
+            </div>
+
+            {/* Thumbnail Row */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+              {images.map((img, i) => (
+                <div key={i} onClick={() => onNav(i - current)} style={{ cursor: 'pointer', flexShrink: 0 }}>
+                  {img.src.endsWith('.mp4') ? (
+                    <video src={img.src} muted playsInline style={{
+                      width: 38, height: 28, objectFit: 'cover', borderRadius: 6, display: 'block',
+                      border: i === current ? `2px solid #d4899a` : '2px solid transparent',
+                      opacity: i === current ? 1 : 0.4,
+                      transition: 'all 0.25s ease',
+                      boxShadow: i === current ? `0 2px 8px rgba(212,137,154,0.3)` : 'none',
+                    }}
+                      onMouseEnter={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
+                      onMouseLeave={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
+                    />
+                  ) : (
+                    <img src={img.src} alt={img.label} style={{
+                      width: 38, height: 28, objectFit: 'cover', borderRadius: 6, display: 'block',
+                      border: i === current ? `2px solid #d4899a` : '2px solid transparent',
+                      opacity: i === current ? 1 : 0.4,
+                      transition: 'all 0.25s ease',
+                      boxShadow: i === current ? `0 2px 8px rgba(212,137,154,0.3)` : 'none',
+                    }}
+                      onMouseEnter={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
+                      onMouseLeave={e => { if (i !== current) (e.currentTarget as HTMLElement).style.opacity = '0.4'; }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Close hint */}
+            <p style={{ fontSize: 9, color: '#9a897c', opacity: 0.7, fontFamily: SANS, letterSpacing: '0.05em' }}>
+              🌸 Gunakan &#8592; &#8594; atau ESC untuk menutup
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/* ── Gallery Section ── */
+
+function GallerySection() {
+  const ref = useRef<HTMLElement>(null);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [activeTag, setActiveTag] = useState('Semua');
+
+  const filtered = activeTag === 'Semua'
+    ? GALLERY_ITEMS
+    : GALLERY_ITEMS.filter(g => g.tag === activeTag);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      // Header entrance
+      gsap.from('[data-g="header"] > *', {
+        y: 50, opacity: 0, stagger: 0.12, duration: 0.9,
+        scrollTrigger: { trigger: '[data-g="header"]', start: 'top 82%' },
+        ease: 'power3.out',
+      });
+
+      // Decorative elements
+      gsap.from('[data-g="deco"]', {
+        scale: 0, rotate: -180, opacity: 0, duration: 1.2,
+        scrollTrigger: { trigger: ref.current, start: 'top 70%' },
+        ease: 'elastic.out(1, 0.5)',
+        stagger: 0.2,
+      });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  // Animate cards whenever filtered list changes
+  useEffect(() => {
+    const cards = document.querySelectorAll<HTMLElement>('[data-g="card"]');
+    gsap.fromTo(cards,
+      { y: 40, opacity: 0, scale: 0.94 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.08, ease: 'power3.out' }
+    );
+
+    cards.forEach((el, i) => {
+      const img = el.querySelector('img');
+      const ov = el.querySelector('[data-ov]');
+      const cap = el.querySelector('[data-cap]');
+      const cup = el.querySelector('[data-cup]');
+
+      const enter = () => {
+        gsap.to(el, { y: -8, scale: 1.02, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+        if (img) gsap.to(img, { scale: 1.12, duration: 0.6, ease: 'power2.out', overwrite: 'auto' });
+        if (ov) gsap.to(ov, { opacity: 1, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+        if (cap) gsap.to(cap, { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+        if (cup) gsap.to(cup, { opacity: 0, overwrite: 'auto' });
+      };
+      const leave = () => {
+        gsap.to(el, { y: 0, scale: 1, duration: 0.4, ease: 'power2.inOut', overwrite: 'auto' });
+        if (img) gsap.to(img, { scale: 1, duration: 0.5, ease: 'power2.inOut', overwrite: 'auto' });
+        if (ov) gsap.to(ov, { opacity: 0, duration: 0.35, ease: 'power2.inOut', overwrite: 'auto' });
+        if (cap) gsap.to(cap, { y: 16, opacity: 0, duration: 0.3, ease: 'power2.in', overwrite: 'auto' });
+        if (cup) gsap.to(cup, { y: 0, opacity: 1, overwrite: 'auto' });
+      };
+
+      el.addEventListener('mouseenter', enter);
+      el.addEventListener('mouseleave', leave);
+    });
+  }, [filtered]);
+
+  useEffect(() => {
+    document.body.style.overflow = lightbox !== null ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [lightbox]);
+
+  const navLightbox = useCallback((dir: number) => {
+    setLightbox(prev => {
+      if (prev === null) return null;
+      return (prev + dir + filtered.length) % filtered.length;
+    });
+  }, [filtered]);
+
+  return (
+    <>
+      <section ref={ref} id="gallery" style={{
+        padding: '120px 5vw 140px',
+        background: `linear-gradient(160deg, ${C.cream} 0%, ${C.bg} 50%, ${C.bg2} 100%)`,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Ambient blobs */}
+        <div style={{ position: 'absolute', top: '-5%', right: '-8%', width: '45vw', height: '45vw', borderRadius: '50%', background: `radial-gradient(circle at 40% 40%, ${C.blushL}28, transparent 68%)`, pointerEvents: 'none', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '-8%', left: '-6%', width: '38vw', height: '38vw', borderRadius: '50%', background: `radial-gradient(circle at 60% 60%, ${C.goldL}22, transparent 68%)`, pointerEvents: 'none', filter: 'blur(40px)' }} />
+
+        {/* Floating decorative icons */}
+        <Camera data-g="deco" size={24} style={{ position: 'absolute', top: '10%', right: '7%', color: C.blush, opacity: 0.18, animation: 'floatY 7s ease-in-out infinite' }} />
+        <Heart data-g="deco" size={18} style={{ position: 'absolute', top: '22%', left: '4%', color: C.gold, opacity: 0.14, animation: 'floatY 6s ease-in-out 1s infinite' }} />
+        <Star data-g="deco" size={16} style={{ position: 'absolute', bottom: '18%', right: '10%', color: C.blushD, opacity: 0.14, animation: 'floatY 8s ease-in-out 0.5s infinite' }} />
+        <Sparkles data-g="deco" size={20} style={{ position: 'absolute', bottom: '12%', left: '9%', color: C.sage, opacity: 0.12, animation: 'floatY 9s ease-in-out 2s infinite' }} />
+
+        <div style={{ maxWidth: 1140, margin: '0 auto', position: 'relative', zIndex: 5 }}>
+
+          {/* ── Header ── */}
+          <div data-g="header" style={{ textAlign: 'center', marginBottom: 52 }}>
+
+            {/* Pill label */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 20 }}>
+              <div style={{ height: 1, width: 56, background: `linear-gradient(to right, transparent, ${C.gold}80)` }} />
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '8px 22px', borderRadius: 50,
+                background: `linear-gradient(135deg, ${C.blushL}60, ${C.goldL}35)`,
+                border: `1px solid ${C.blushL}90`,
+                boxShadow: `0 4px 18px ${C.blushL}50`,
+              }}>
+                <Camera size={13} style={{ color: C.blushD }} />
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.24em', textTransform: 'uppercase', color: C.blushD, fontFamily: SANS }}>Galeri Foto</span>
+              </div>
+              <div style={{ height: 1, width: 56, background: `linear-gradient(to left, transparent, ${C.gold}80)` }} />
+            </div>
+
+            {/* Main title */}
+            <h2 style={{
+              fontSize: 'clamp(2.4rem, 5.5vw, 4rem)',
+              fontWeight: 600, fontFamily: SERIF, fontStyle: 'italic',
+              lineHeight: 1.1, color: C.text, marginBottom: 16,
+            }}>
+              Momen <span style={{
+                color: C.blush,
+                background: `linear-gradient(135deg, ${C.blush}, ${C.blushD})`,
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>Indah</span> Kita
+            </h2>
+
+            <p style={{ fontSize: 15, color: C.textM, fontFamily: SANS, maxWidth: 460, margin: '0 auto 28px', lineHeight: 1.75 }}>
+              Setiap foto menyimpan cerita, setiap momen adalah hadiah yang tak ternilai.
+            </p>
+
+            {/* ── Filter Pills ── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {GALLERY_TAGS.map(tag => {
+                const active = tag === activeTag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => setActiveTag(tag)}
+                    style={{
+                      padding: '8px 20px', borderRadius: 50, cursor: 'pointer',
+                      fontFamily: SANS, fontSize: 12, fontWeight: 700, letterSpacing: '0.05em',
+                      border: active ? 'none' : `1.5px solid ${C.warm}`,
+                      background: active
+                        ? `linear-gradient(135deg, ${C.blush}, ${C.blushD})`
+                        : 'rgba(255,255,255,0.65)',
+                      color: active ? '#fff' : C.textM,
+                      boxShadow: active ? `0 6px 20px rgba(168,79,101,0.28)` : '0 2px 8px rgba(45,31,20,0.05)',
+                      transform: active ? 'translateY(-2px)' : 'none',
+                      transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Masonry Grid ── */}
+          <div className="gallery-masonry" style={{
+            columns: 'var(--gallery-cols, 4)',
+            columnGap: 18,
+          }}>
+            {filtered.map((item, i) => {
+              const { src, label, desc, Icon, accent, tag, rowSpan } = item;
+              const globalIdx = GALLERY_ITEMS.indexOf(item);
+
+              return (
+                <div
+                  key={`${tag}-${i}`}
+                  data-g="card"
+                  onClick={() => setLightbox(i)}
+                  style={{
+                    breakInside: 'avoid',
+                    marginBottom: 18,
+                    position: 'relative',
+                    borderRadius: 20,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    boxShadow: '0 6px 28px rgba(45,31,20,0.08)',
+                    display: 'block',
+                    /* Vary aspect ratio for masonry feel */
+                    aspectRatio: rowSpan === 2 ? '3/4' : (i % 3 === 0 ? '4/5' : '3/4'),
+                  }}
+                >
+                  {/* Photo */}
+                  {/* Photo or Video */}
+                  {src.endsWith('.mp4') ? (
+                    <video
+                      src={src}
+                      muted
+                      loop
+                      playsInline
+                      autoPlay
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <img
+                      src={src} alt={label}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'none' }}
+                    />
+                  )}
+
+                  {/* Vignette gradient (always on) */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `linear-gradient(180deg, transparent 45%, rgba(20,10,5,0.75) 100%)`,
+                    pointerEvents: 'none',
+                  }} />
+
+                  {/* Hover overlay */}
+                  <div data-ov style={{
+                    position: 'absolute', inset: 0,
+                    background: `linear-gradient(160deg, ${accent}22 0%, transparent 40%, rgba(15,8,4,0.38) 100%)`,
+                    opacity: 0, pointerEvents: 'none',
+                  }} />
+
+                  {/* Tag pill top-left */}
+                  <div style={{
+                    position: 'absolute', top: 14, left: 14,
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '5px 12px', borderRadius: 50,
+                    background: 'rgba(255,255,255,0.18)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.28)',
+                  }}>
+                    <Icon size={10} style={{ color: '#fff' }} />
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', fontFamily: SANS, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{tag}</span>
+                  </div>
+
+                  {/* Index number top-right */}
+                  <div style={{
+                    position: 'absolute', top: 14, right: 14,
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.22)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', fontFamily: SANS }}>{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+
+                  {/* Bottom caption (slides up on hover) */}
+                  <div data-cap style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '24px 18px 18px',
+                    opacity: 0, transform: 'translateY(16px)',
+                    background: 'linear-gradient(0deg, rgba(15,8,4,0.6) 0%, transparent 100%)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{
+                          fontSize: 15, fontWeight: 700, color: '#fff',
+                          fontFamily: SERIF, fontStyle: 'italic', lineHeight: 1.3,
+                          marginBottom: 3,
+                          textShadow: '0 1px 6px rgba(0,0,0,0.5)',
+                        }}>{label}</h3>
+                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', fontFamily: SANS, lineHeight: 1.45 }}>{desc}</p>
+                      </div>
+                      {/* View button */}
+                      <div style={{
+                        width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                        background: `linear-gradient(135deg, ${accent}CC, ${accent})`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: `0 4px 14px ${accent}60`,
+                      }}>
+                        <Camera size={13} style={{ color: '#fff' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Static bottom label (always visible) */}
+                  <div data-cup style={{
+                    position: 'absolute', bottom: 14, left: 18,
+                  }}>
+                    <h3 style={{
+                      fontSize: 14, fontWeight: 700, color: '#fff',
+                      fontFamily: SERIF, fontStyle: 'italic',
+                      textShadow: '0 1px 6px rgba(0,0,0,0.6)',
+                    }}>{label}</h3>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Bottom CTA strip ── */}
+          <div style={{ textAlign: 'center', marginTop: 52 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              {GALLERY_ITEMS.map((_, i) => (
+                <div key={i} style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: filtered.includes(GALLERY_ITEMS[i]) ? C.blush : C.warm,
+                  transition: 'all 0.3s ease',
+                  transform: filtered.includes(GALLERY_ITEMS[i]) ? 'scale(1.3)' : 'scale(1)',
+                }} />
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Lightbox Modal */}
+      {lightbox !== null && (
+        <GalleryLightbox
+          images={filtered}
+          current={lightbox}
+          onClose={() => setLightbox(null)}
+          onNav={navLightbox}
+        />
+      )}
+    </>
+  );
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUOTE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function QuoteSection() {
+  const [cur, setCur] = useState(0);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  const changeTo = useCallback((idx: number) => {
+    if (textRef.current) {
+      gsap.to(textRef.current, {
+        opacity: 0, y: -8, duration: 0.25,
+        onComplete: () => {
+          setCur(idx);
+          if (textRef.current) gsap.fromTo(textRef.current, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+        },
+      });
+    } else setCur(idx);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => changeTo((cur + 1) % QUOTES.length), 5000);
+    return () => clearInterval(t);
+  }, [cur, changeTo]);
+
+  return (
+    <section style={{
+      padding: '100px 5vw',
+      background: `linear-gradient(135deg, ${C.blushL}50, ${C.cream}, ${C.goldL}30)`,
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{ position: 'absolute', top: '-20%', right: '-15%', width: '50vw', height: '50vw', borderRadius: '50%', background: `${C.blushL}40`, filter: 'blur(80px)', pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 5 }}>
+        <Quote size={32} style={{ color: C.blush, opacity: 0.5, marginBottom: 24 }} />
+
+        <p ref={textRef} style={{
+          fontSize: 'clamp(20px, 3vw, 28px)',
+          fontFamily: SERIF, fontStyle: 'italic',
+          fontWeight: 400, lineHeight: 1.6,
+          color: C.text,
+        }}>{QUOTES[cur]}</p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 32 }}>
+          {QUOTES.map((_, i) => (
+            <button key={i} onClick={() => changeTo(i)} style={{
+              width: i === cur ? 28 : 8, height: 8, borderRadius: 4,
+              border: 'none', cursor: 'pointer', padding: 0,
+              background: i === cur ? `linear-gradient(135deg, ${C.blush}, ${C.gold})` : C.warm,
+              transition: 'all 0.3s ease',
+            }} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FINAL — with big background photo
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function FinalSection({ onCelebrate }: { onCelebrate: () => void }) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from('[data-f="heart"]', { scale: 0.3, opacity: 0, duration: 1.2, ease: 'elastic.out(1,0.4)', scrollTrigger: { trigger: ref.current, start: 'top 60%' } });
+      gsap.from('[data-f="title"]', { y: 40, opacity: 0, duration: 0.8, scrollTrigger: { trigger: ref.current, start: 'top 55%' }, delay: 0.3 });
+      gsap.from('[data-f="text"]', { y: 30, opacity: 0, duration: 0.7, stagger: 0.15, scrollTrigger: { trigger: ref.current, start: 'top 50%' }, delay: 0.6 });
+      gsap.from('[data-f="cta"]', { y: 20, opacity: 0, duration: 0.6, scrollTrigger: { trigger: ref.current, start: 'top 45%' }, delay: 0.9 });
+    }, ref);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section ref={ref} style={{
+      position: 'relative',
+      padding: '0', minHeight: '80vh',
+      overflow: 'hidden',
+    }}>
+      {/* Background photo */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <img src='images/footer.jpeg' alt="Couple sunset" style={{
+          width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+          animation: 'kenBurns 25s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(45,31,20,0.6) 0%, rgba(45,31,20,0.75) 50%, rgba(45,31,20,0.85) 100%)',
+        }} />
+      </div>
+
+      {/* Content */}
+      <div style={{
+        position: 'relative', zIndex: 5,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '80vh', padding: '80px 24px', textAlign: 'center',
+      }}>
+        <div data-f="heart" style={{
+          width: 90, height: 90, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 32,
+          animation: 'pulseGlow 3s ease-in-out infinite',
+        }}>
+          <Heart size={38} fill="#fff" style={{ color: '#fff' }} />
+        </div>
+
+        <div data-f="title">
+          <h2 style={{
+            fontSize: 'clamp(2.4rem, 7vw, 4.5rem)',
+            fontWeight: 600, fontFamily: SERIF, fontStyle: 'italic',
+            lineHeight: 1.15, color: '#fff', marginBottom: 20,
+          }}>
+            Selamat Ulang Tahun,<br />{NAME}!
+          </h2>
+        </div>
+
+        <div style={{ width: 60, height: 1.5, background: 'rgba(255,255,255,0.3)', margin: '0 auto 24px' }} data-f="text" />
+
+        <p data-f="text" style={{ fontSize: 17, lineHeight: 1.85, color: 'rgba(255,255,255,0.85)', maxWidth: 480, margin: '0 auto 12px', fontFamily: SANS }}>
+          Semoga hari ulang tahunmu ini menjadi awal dari bab paling bahagia dalam hidupmu.
+        </p>
+        <p data-f="text" style={{ fontSize: 17, lineHeight: 1.85, color: 'rgba(255,255,255,0.85)', maxWidth: 480, margin: '0 auto 44px', fontFamily: SANS }}>
+          Aku mencintaimu kemarin, hari ini, dan selamanya.
+        </p>
+
+        <div data-f="text" style={{ display: 'flex', justifyContent: 'center', gap: 14, marginBottom: 40 }}>
+          {[Heart, Star, Gem, Star, Heart].map((Ic, i) => (
+            <Ic key={i} size={i === 2 ? 22 : 16} fill="rgba(255,255,255,0.8)" style={{
+              color: 'rgba(255,255,255,0.8)',
+              animation: `floatY ${2 + i * 0.2}s ease-in-out ${i * 0.1}s infinite`,
+            }} />
+          ))}
+        </div>
+
+        <div data-f="cta">
+          <Btn id="final-celebrate-btn" onClick={onCelebrate} primary>
+            <PartyPopper size={18} /> Rayakan!
+          </Btn>
+        </div>
+
+        <p style={{ marginTop: 44, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600, fontFamily: SANS, letterSpacing: '0.06em' }}>
+          Dibuat dengan <Heart size={10} fill={C.blush} style={{ color: C.blush, display: 'inline', verticalAlign: 'middle' }} /> oleh {SENDER_NAME}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROOT PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export default function BirthdayPage() {
+  const [confetti, setConfetti] = useState(false);
+  const handleCelebrate = () => {
+    setConfetti(true);
+    setTimeout(() => setConfetti(false), 6000);
+  };
+
+  return (
+    <>
+      <Confetti active={confetti} />
+      <main>
+        <HeroSection onCelebrate={handleCelebrate} />
+        <LetterSection />
+        <MemoriesSection />
+        <WishesSection />
+        <GallerySection />
+        <QuoteSection />
+        <FinalSection onCelebrate={handleCelebrate} />
+      </main>
+    </>
   );
 }
