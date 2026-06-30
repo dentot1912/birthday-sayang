@@ -1372,12 +1372,11 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
         <div
           ref={infoRef}
           className="cute-lightbox-info-sec"
-          style={{ justifyContent: 'space-between' }}
         >
           {/* Top Half */}
           <div>
             {/* Sticker Badge + Tag info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+            <div className="lb-info-badge-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
                 width: 44, height: 44, borderRadius: 14, flexShrink: 0,
                 background: `linear-gradient(135deg, ${item.accent}25, ${item.accent}08)`,
@@ -1410,7 +1409,7 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
             </h2>
 
             {/* Decorative Heart Line */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+            <div className="lb-info-heart-line" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 24, height: 1.5, background: '#f5d5d5' }} />
               <span style={{ fontSize: 10, color: '#d4899a' }}>♥</span>
               <div style={{ flex: 1, height: 1.5, background: `linear-gradient(90deg, #f5d5d5, transparent)` }} />
@@ -1423,7 +1422,7 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
           </div>
 
           {/* Bottom Half */}
-          <div style={{ marginTop: 20 }}>
+          <div className="lb-info-bottom-half">
             {/* Counter + Pill Dots — inline row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <span className="lb-counter" style={{
@@ -1458,7 +1457,7 @@ function GalleryLightbox({ images, current, onClose, onNav }: {
             <p className="lb-hint-desktop" style={{ fontSize: 9, color: '#9a897c', opacity: 0.7, fontFamily: SANS, letterSpacing: '0.05em' }}>
               🌸 Gunakan &#8592; &#8594; atau ESC untuk menutup
             </p>
-            <p className="lb-hint-mobile" style={{ fontSize: 10, color: '#9a897c', opacity: 0.6, fontFamily: SANS, letterSpacing: '0.03em', textAlign: 'center', display: 'none' }}>
+            <p className="lb-hint-mobile" style={{ fontSize: 10, color: '#9a897c', opacity: 0.6, fontFamily: SANS, letterSpacing: '0.03em', textAlign: 'center' }}>
               ← Swipe untuk navigasi · Tap di luar untuk tutup →
             </p>
           </div>
